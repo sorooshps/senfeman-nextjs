@@ -13,16 +13,26 @@ export default function UserPage() {
   const { getToken } = useAuth('seller');
   const [userName, setUserName] = useState("کاربر");
   const [userRole, setUserRole] = useState("فروشنده");
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Get user info from localStorage
-    const storedName = localStorage.getItem("user_name") || "کاربر";
-    const phone = localStorage.getItem("phone") || "";
-    
-    setUserName(storedName);
-    
-    // You could fetch more user data from API here
+    // This code will only run on the client side
+    if (typeof window !== 'undefined') {
+      // Get user info from localStorage
+      const storedName = localStorage.getItem("user_name") || "کاربر";
+      const phone = localStorage.getItem("phone") || "";
+      
+      setUserName(storedName);
+      setIsLoading(false);
+      
+      // You could fetch more user data from API here
+    }
   }, []);
+  
+  // Show loading state while checking localStorage
+  if (isLoading) {
+    return <div>Loading...</div>; // or a loading spinner
+  }
   
   const handleLogout = () => {
     // Clear all auth tokens
