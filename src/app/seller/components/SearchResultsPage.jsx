@@ -11,7 +11,7 @@ import SellerNavbar from "./SellerNavbar";
 import SearchInput from "./SearchInput";
 import logo from "../../../assets/fonts/ic_neo.png";
 import RecentSearches from "./RecentSearches";
-import { useAuth } from "../../../hooks/useAuth";
+
 import {
   getWholesalersByProduct,
   getWholesalersByCategoryProduct,
@@ -132,6 +132,12 @@ const SearchResultsPage = ({
       // If URL is already absolute (starts with http), return it as is
       if (imageUrl.startsWith('http')) {
         return imageUrl;
+      }
+      
+      // Remove '/media' prefix if it exists
+      if (imageUrl.startsWith('/media/')) {
+        imageUrl = imageUrl.replace('/media', '');
+        console.log('Removed /media prefix, new URL:', imageUrl);
       }
       
       // Make sure the URL doesn't have double slashes

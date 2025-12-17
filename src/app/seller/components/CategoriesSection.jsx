@@ -207,12 +207,17 @@ const CategoriesSection = ({
   // Get product image with proper URL formatting
   const getProductImage = (product) => {
     if (product?.images && product.images.length > 0) {
-      const imageUrl = product.images[0].image_url;
+      let imageUrl = product.images[0].image_url;
       if (!imageUrl) return null;
       
       // If URL is already absolute (starts with http), return it as is
       if (imageUrl.startsWith('http')) {
         return imageUrl;
+      }
+      
+      // Remove '/media' prefix if it exists
+      if (imageUrl.startsWith('/media/')) {
+        imageUrl = imageUrl.replace('/media', '');
       }
       
       // Make sure the URL doesn't have double slashes

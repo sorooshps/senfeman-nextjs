@@ -110,12 +110,17 @@ export default function DashboardContent() {
     
     // Check if product has images array
     if (product.images && product.images.length > 0) {
-      const imageUrl = product.images[0].image_url;
+      let imageUrl = product.images[0].image_url;
       if (!imageUrl) return null;
       
       // If URL is already absolute (starts with http), return it as is
       if (imageUrl.startsWith('http')) {
         return imageUrl;
+      }
+      
+      // Remove '/media' prefix if it exists
+      if (imageUrl.startsWith('/media/')) {
+        imageUrl = imageUrl.replace('/media', '');
       }
       
       // Make sure the URL doesn't have double slashes
@@ -126,10 +131,21 @@ export default function DashboardContent() {
     } 
     // Fallback to direct image property if available
     else if (product.image) {
-      if (product.image.includes('http')) {
-        return product.image;
+      let imagePath = product.image;
+      
+      if (imagePath.includes('http')) {
+        return imagePath;
       } else {
-        return `${API_BASE_URL}${product.image}`;
+        // Remove '/media' prefix if it exists
+        if (imagePath.startsWith('/media/')) {
+          imagePath = imagePath.replace('/media', '');
+        }
+        
+        // Make sure the URL doesn't have double slashes
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        imagePath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+        
+        return `${baseUrl}${imagePath}`;
       }
     }
     

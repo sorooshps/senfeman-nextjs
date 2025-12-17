@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect , useRef , useMemo } from "react";
 import apiConfig from "../../../config/api.config";
 import { FaChevronLeft, FaChevronDown, FaChevronUp, FaFilter } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosClose } from "react-icons/io";
@@ -240,9 +240,15 @@ const ProductListPage = ({
     // If URL is already absolute (starts with http), return it as is
     if (imageUrl.startsWith('http')) return imageUrl;
     
+    // Remove '/media' prefix if it exists
+    let processedUrl = imageUrl;
+    if (processedUrl.startsWith('/media/')) {
+      processedUrl = processedUrl.replace('/media', '');
+    }
+    
     // Make sure the URL doesn't have double slashes
     const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-    const formattedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+    const formattedUrl = processedUrl.startsWith('/') ? processedUrl : `/${processedUrl}`;
     
     return `${baseUrl}${formattedUrl}`;
   }, []);

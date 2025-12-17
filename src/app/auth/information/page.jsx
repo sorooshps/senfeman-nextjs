@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState ,useEffect } from "react";
 import { FaChevronRight, FaPlus, FaCheck } from "react-icons/fa";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,16 +19,29 @@ export default function InformationPage() {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
-    phone: localStorage.getItem("phone") || "",
+    phone: "",
     phone2: "",
     operate: "s",
     address: "",
     city: 1
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [error, setError] = useState("");
+  const [role, setRole] = useState("wholesaler");
   const router = useRouter();
-  const role = localStorage.getItem("selectedRole") || "wholesaler";
+
+  // Load data from localStorage after component mounts
+  useEffect(() => {
+    const phone = typeof window !== 'undefined' ? localStorage.getItem("phone") : "";
+    const userRole = typeof window !== 'undefined' ? localStorage.getItem("selectedRole") : "wholesaler";
+    
+    setFormData(prev => ({
+      ...prev,
+      phone: phone || ""
+    }));
+    setRole(userRole || "wholesaler");
+    setLoading(false);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
