@@ -1,0 +1,13 @@
+{
+  "$schema": "https://windsurf.dev/schemas/deploy.schema.json",
+  "name": "senfeman-nextjs",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "port": 3000,
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
