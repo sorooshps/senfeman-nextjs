@@ -1,7 +1,7 @@
 const config = {
   // Base API URL
-  // API_BASE_URL:  'http://185.105.239.235:8000',
-  API_BASE_URL:  'http://127.0.0.1:8000',
+  API_BASE_URL:  'http://185.105.239.235:8000',
+  // API_BASE_URL:  'http://127.0.0.1:8000',
   
   // API Endpoints
   endpoints: {
