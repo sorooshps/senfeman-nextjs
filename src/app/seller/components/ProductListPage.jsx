@@ -5,14 +5,16 @@ import apiConfig from "../../../config/api.config";
 import { FaChevronLeft, FaChevronDown, FaChevronUp, FaFilter } from "react-icons/fa6";
 import { IoIosArrowBack, IoIosClose } from "react-icons/io";
 import { useAuth } from "../../../hooks/useAuth";
-import { searchProducts, getBrands } from "../../../api/seller";
-import logo from "../../../assets/fonts/ic_neo.png";
+import { searchProducts, getBrands, getColors } from "../../../api/seller";
+import logo from "../../../assets/fonts/LOGO_SVG.svg";
 import Image from "next/image";
 import SellerNavbar from "./SellerNavbar";
+import ImageModal from "../../../components/ImageModal";
 
 // Cache for API responses
 const productCache = new Map();
 const brandCache = { data: null, timestamp: 0 };
+const colorCache = { data: null, timestamp: 0 };
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes cache expiry
 
 const PAGE_SIZE = 20;
@@ -44,6 +46,49 @@ const ProductListPage = ({
   const [brandSearch, setBrandSearch] = useState("");
   const [expandedFilters, setExpandedFilters] = useState({ brand: true, color: true, year: false });
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+  
+  // Image modal state
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedProductTitle, setSelectedProductTitle] = useState("");
+
+  // Map color names to default hex codes when color_code is missing
+  const getDefaultColorCode = useCallback((colorName) => {
+    const colorMap = {
+      'مشکی': '#000000',
+      'استیل': '#CCCCCC',
+      'سفید': '#FFFFFF',
+      'خاکستری': '#808080',
+      'استیل مشکی': '#333333',
+      'آبی': '#0000FF',
+      'قرمز': '#FF0000',
+      'کرم': '#FFFDD0',
+      'صورتی': '#FFC0CB',
+      'سبز': '#00FF00',
+      'نارنجی': '#FFA500',
+      'زرد': '#FFFF00',
+      'قهوه ای': '#A52A2A',
+      'سرمه ای': '#000080',
+      'دودی': '#696969',
+      'نقره ای': '#C0C0C0',
+      'رزگلد': '#B76E79',
+      'طلایی': '#FFD700',
+      'بنفش': '#800080',
+      'بژ': '#F5F5DC',
+      'نوک مدادی': '#2F4F4F',
+      'مسی': '#B87333',
+      'سیلور': '#C0C0C0',
+    };
+    return colorMap[colorName] || '#EEEEEE';
+  }, []);
+
+  // Add color codes to colors that are missing them
+  const enhanceColorData = useCallback((colors) => {
+    return colors.map(color => ({
+      ...color,
+      color_code: color.color_code || getDefaultColorCode(color.name)
+    }));
+  }, [getDefaultColorCode]);
 
   // Fetch all brands once with caching
   const fetchBrands = useCallback(async () => {
@@ -53,6 +98,8 @@ const ProductListPage = ({
     // Check if we have valid cache
     if (brandCache.data && (Date.now() - brandCache.timestamp < CACHE_EXPIRY)) {
       setAllBrands(brandCache.data);
+      // Also update available brands to show all brands in filter
+      setAvailableBrands(brandCache.data); 
       return;
     }
     
@@ -65,24 +112,57 @@ const ProductListPage = ({
       brandCache.timestamp = Date.now();
       
       setAllBrands(brandList);
+      // Also update available brands to show all brands in filter
+      setAvailableBrands(brandList); 
     } catch (err) {
       console.error('Failed to fetch brands:', err);
     }
   }, [getToken]);
-  
-  // Load brands on component mount
+
+  // Fetch all colors once with caching
+  const fetchColors = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
+    
+    // Check if we have valid cache
+    if (colorCache.data && (Date.now() - colorCache.timestamp < CACHE_EXPIRY)) {
+      // Add color codes to cached colors
+      const enhancedColors = enhanceColorData(colorCache.data);
+      setAvailableColors(enhancedColors);
+      return;
+    }
+    
+    try {
+      const response = await getColors(token);
+      const colorList = response.results || response || [];
+      console.log('Colors from API:', colorList);
+      
+      // Add color codes to colors
+      const enhancedColors = enhanceColorData(colorList);
+      
+      // Update cache with original data
+      colorCache.data = colorList;
+      colorCache.timestamp = Date.now();
+      
+      // Set state with enhanced data
+      setAvailableColors(enhancedColors);
+    } catch (err) {
+      console.error('Failed to fetch colors:', err);
+    }
+  }, [getToken, enhanceColorData]);
+
+  // Load brands and colors on component mount
   useEffect(() => {
     fetchBrands();
-  }, [fetchBrands]);
+    fetchColors();
+  }, [fetchBrands, fetchColors]);
   
-  // Helper function to extract filter options from products
-  const updateFilterOptions = useCallback((productList, allBrands) => {
-    // Extract unique brand IDs from products
+  // Helper function for statistics only (not used for filters)
+  const updateFilterOptions = useCallback((productList) => {
+    // Extract unique brand IDs from products for statistics only
     const productBrandIds = [...new Set(productList.map(p => p.brand).filter(Boolean))];
-    const brandsWithProducts = allBrands.filter(b => productBrandIds.includes(b.id));
-    setAvailableBrands(brandsWithProducts);
-
-    // Extract unique colors from products
+    
+    // Extract unique colors from products for statistics only
     const colorsMap = new Map();
     productList.forEach(p => {
       if (p.colors && Array.isArray(p.colors)) {
@@ -93,11 +173,16 @@ const ProductListPage = ({
         });
       }
     });
-    setAvailableColors(Array.from(colorsMap.values()));
+    
+    // Just logging for debug
+    console.log(`Products with ${productBrandIds.length} brands and ${colorsMap.size} colors found`);
   }, []);
 
   // Request tracker to prevent duplicate requests
   const requestRef = useRef({ inProgress: false, params: null });
+  
+  // Track previous filter state to detect changes including clearing filters
+  const prevFiltersRef = useRef({ brandIds: [], colorIds: [] });
   
   // Fetch products with pagination and caching
   const fetchProducts = useCallback(async (page = 1, resetFilters = false) => {
@@ -108,8 +193,16 @@ const ProductListPage = ({
     const params = { page_size: PAGE_SIZE, page };
     if (searchQuery) params.q = searchQuery;
     if (subcategoryId) params.scategory = subcategoryId;
-    if (!resetFilters && selectedBrandIds.length > 0) params.brand = selectedBrandIds.join(',');
-    if (!resetFilters && selectedColorIds.length > 0) params.color = selectedColorIds.join(',');
+    
+    // Only add filter params if not resetting AND we have selected filters
+    if (!resetFilters) {
+      if (selectedBrandIds.length > 0) {
+        params.brand = selectedBrandIds.join(',');
+      }
+      if (selectedColorIds.length > 0) {
+        params.color = selectedColorIds.join(',');
+      }
+    }
     
     // Create cache key
     const cacheKey = JSON.stringify(params);
@@ -128,14 +221,14 @@ const ProductListPage = ({
         
         // Set pagination info from cached metadata
         const meta = cachedData.meta || {};
-        setTotalCount(meta.total_items || cachedData.data.length);
-        setHasNextPage(!!meta.has_next);
-        setHasPrevPage(page > 1);
+        setTotalCount(meta.count || cachedData.data.length);
+        setHasNextPage(!!meta.next);
+        setHasPrevPage(!!meta.previous);
         setCurrentPage(page);
         
         // Extract filter options if needed
         if (page === 1 && resetFilters) {
-          updateFilterOptions(cachedData.data, allBrands);
+          updateFilterOptions(cachedData.data);
         }
         return;
       }
@@ -148,7 +241,7 @@ const ProductListPage = ({
     try {
       const response = await searchProducts(params, token);
       const productList = response.results || response || [];
-      const meta = response.meta || {};
+      const meta = response || {};
       
       // Update cache
       productCache.set(cacheKey, {
@@ -160,14 +253,14 @@ const ProductListPage = ({
       setProducts(productList);
       
       // Update pagination state
-      setTotalCount(meta.total_items || productList.length);
-      setHasNextPage(!!meta.has_next);
-      setHasPrevPage(page > 1);
+      setTotalCount(meta.count || productList.length);
+      setHasNextPage(!!meta.next);
+      setHasPrevPage(!!meta.previous);
       setCurrentPage(page);
 
-      // Extract filter options if needed
+      // We still call updateFilterOptions but only for statistics
       if (page === 1 && resetFilters) {
-        updateFilterOptions(productList, allBrands);
+        updateFilterOptions(productList);
       }
     } catch (err) {
       console.error('Failed to fetch products:', err);
@@ -175,20 +268,37 @@ const ProductListPage = ({
       setLoading(false);
       requestRef.current.inProgress = false;
     }
-  }, [getToken, searchQuery, subcategoryId, selectedBrandIds, selectedColorIds, allBrands, updateFilterOptions]);
+  }, [getToken, searchQuery, subcategoryId, selectedBrandIds, selectedColorIds]);
 
 
-  // Fetch initial products with memoized dependency array
+  // Fetch initial products when component mounts or searchQuery/subcategoryId changes
   useEffect(() => {
+    // Reset filter selections when search query or subcategory changes
+    setSelectedBrandIds([]);
+    setSelectedColorIds([]);
     fetchProducts(1, true);
-  }, [fetchProducts, searchQuery, subcategoryId]);
+  }, [searchQuery, subcategoryId]);
 
   // Fetch filtered products when filters change
   useEffect(() => {
-    if (selectedBrandIds.length > 0 || selectedColorIds.length > 0) {
+    // Check if filters have actually changed from previous state
+    const prevBrandIds = prevFiltersRef.current.brandIds;
+    const prevColorIds = prevFiltersRef.current.colorIds;
+    
+    const brandsChanged = JSON.stringify(prevBrandIds.sort()) !== JSON.stringify([...selectedBrandIds].sort());
+    const colorsChanged = JSON.stringify(prevColorIds.sort()) !== JSON.stringify([...selectedColorIds].sort());
+    
+    // If filters changed and we're not on initial mount (prev filters exist)
+    if ((brandsChanged || colorsChanged) && (prevBrandIds.length > 0 || prevColorIds.length > 0 || selectedBrandIds.length > 0 || selectedColorIds.length > 0)) {
       setCurrentPage(1);
       fetchProducts(1, false);
     }
+    
+    // Update previous filter state
+    prevFiltersRef.current = {
+      brandIds: [...selectedBrandIds],
+      colorIds: [...selectedColorIds]
+    };
   }, [selectedBrandIds, selectedColorIds, fetchProducts]);
 
   // Pagination handlers
@@ -223,8 +333,14 @@ const ProductListPage = ({
   };
 
   const clearFilters = () => {
+    // Clear selected filters
     setSelectedBrandIds([]);
     setSelectedColorIds([]);
+    // Reset current page and fetch products without filters
+    setCurrentPage(1);
+    // Force reload products with cleared filters (true flag ensures filter params are not added)
+    fetchProducts(1, true);
+    console.log('Filters cleared, reloading all products');
   };
 
   // API base URL
@@ -262,6 +378,17 @@ const ProductListPage = ({
 
 
   const hasActiveFilters = selectedBrandIds.length > 0 || selectedColorIds.length > 0;
+
+  // Handle image click
+  const handleImageClick = useCallback((e, product) => {
+    e.stopPropagation();
+    const imageUrl = getProductImage(product);
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setSelectedProductTitle(product.title);
+      setIsImageModalOpen(true);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -312,7 +439,10 @@ const ProductListPage = ({
                   onClick={() => onProductSelect(product)}
                   className="bg-white rounded-xl p-4 border border-gray-200 flex items-center gap-4 cursor-pointer hover:border-blue-300 transition-colors"
                 >
-                  <div className="w-16 h-16 shrink-0 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                  <div 
+                    className="w-16 h-16 shrink-0 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+                    onClick={(e) => handleImageClick(e, product)}
+                  >
                     {getProductImage(product) ? (
                       <Image 
                         src={getProductImage(product)} 
@@ -329,7 +459,27 @@ const ProductListPage = ({
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 text-sm truncate">{product.title}</h3>
                     {product.code && (
-                      <p className="text-xs text-gray-500 mt-1">کد: {product.code}</p>
+                      <div>
+                        <p className="text-xs text-gray-500 mt-1">کد: {product.code}</p>
+                        {product.colors && product.colors.length > 0 && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">رنگ:</span>
+                            <div className="flex items-center gap-1">
+                              {product.colors.map((color, colorIndex) => (
+                                <div key={`${product.id}-color-${color.id}-${colorIndex}`} className="flex items-center gap-1">
+                                  {color.color_code && (
+                                    <div 
+                                      className="w-3 h-3 rounded-full border border-gray-300" 
+                                      style={{ backgroundColor: color.color_code }}
+                                    ></div>
+                                  )}
+                                  <span className="text-xs text-gray-500">{color.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                   <FaChevronLeft className="text-gray-400 shrink-0" />
@@ -337,7 +487,7 @@ const ProductListPage = ({
               ))}
               
               {/* Mobile Pagination */}
-              {totalPages > 1 && (
+              {totalCount > PAGE_SIZE && (
                 <div className="flex items-center justify-center gap-4 mt-6 pb-4">
                   <button
                     onClick={goToPrevPage}
@@ -412,8 +562,8 @@ const ProductListPage = ({
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"
                     />
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {filteredBrands.map((brand) => (
-                        <label key={brand.id} className="flex items-center gap-3 cursor-pointer">
+                      {filteredBrands.map((brand, index) => (
+                        <label key={`brand-${brand.id}-${index}`} className="flex items-center gap-3 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={selectedBrandIds.includes(brand.id)}
@@ -439,8 +589,8 @@ const ProductListPage = ({
                 </button>
                 {expandedFilters.color && (
                   <div className="px-4 pb-4 space-y-2 max-h-48 overflow-y-auto">
-                    {availableColors.map((color) => (
-                      <label key={color.id} className="flex items-center gap-3 cursor-pointer">
+                    {availableColors.map((color, index) => (
+                      <label key={`color-${color.id}-${index}`} className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={selectedColorIds.includes(color.id)}
@@ -501,7 +651,10 @@ const ProductListPage = ({
                     onClick={() => onProductSelect(product)}
                     className="px-6 py-4 flex items-center gap-6 cursor-pointer hover:bg-gray-50 transition-colors group"
                   >
-                    <div className="w-28 h-28 shrink-0 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <div 
+                      className="w-28 h-28 shrink-0 bg-gray-100 rounded-xl flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+                      onClick={(e) => handleImageClick(e, product)}
+                    >
                     {getProductImage(product) ? (
                       <Image 
                         src={getProductImage(product)} 
@@ -517,9 +670,29 @@ const ProductListPage = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 text-base">{product.title}</h3>
-                      {product.code && (
-                        <p className="text-sm text-gray-500 mt-1">کد محصول: {product.code}</p>
-                      )}
+                      <div>
+                        {product.code && (
+                          <p className="text-sm text-gray-500 mt-1">کد محصول: {product.code}</p>
+                        )}
+                        {product.colors && product.colors.length > 0 && (
+                          <div className="flex items-center flex-wrap gap-2 mt-2">
+                            <span className="text-sm text-gray-500">رنگ:</span>
+                            <div className="flex items-center flex-wrap gap-2">
+                              {product.colors.map((color, colorIndex) => (
+                                <div key={`${product.id}-color-${color.id}-${colorIndex}`} className="flex items-center gap-1">
+                                  {color.color_code && (
+                                    <div 
+                                      className="w-4 h-4 rounded-full border border-gray-300" 
+                                      style={{ backgroundColor: color.color_code }}
+                                    ></div>
+                                  )}
+                                  <span className="text-sm text-gray-500">{color.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <FaChevronLeft className="text-gray-400 group-hover:text-blue-500 transition-colors" />
                   </div>
@@ -528,7 +701,7 @@ const ProductListPage = ({
             </div>
             
             {/* Desktop Pagination */}
-            {totalPages > 1 && !loading && (
+            {totalCount > PAGE_SIZE && !loading && (
               <div className="flex items-center justify-center gap-4 py-6 border-t border-gray-100">
                 <button
                   onClick={goToPrevPage}
@@ -595,8 +768,8 @@ const ProductListPage = ({
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-blue-400"
                     />
                     <div className="space-y-3 max-h-56 overflow-y-auto">
-                      {filteredBrands.map((brand) => (
-                        <label key={brand.id} className="flex items-center gap-3 cursor-pointer group">
+                      {filteredBrands.map((brand, index) => (
+                        <label key={`desktop-brand-${brand.id}-${index}`} className="flex items-center gap-3 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedBrandIds.includes(brand.id)}
@@ -622,15 +795,21 @@ const ProductListPage = ({
                 </button>
                 {expandedFilters.color && (
                   <div className="px-5 pb-4 space-y-3 max-h-56 overflow-y-auto">
-                    {availableColors.map((color) => (
-                      <label key={color.id} className="flex items-center gap-3 cursor-pointer group">
+                    {availableColors.map((color, index) => (
+                      <label key={`desktop-color-${color.id}-${index}`} className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedColorIds.includes(color.id)}
                           onChange={() => toggleColor(color.id)}
                           className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700 group-hover:text-gray-900">{color.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-4 h-4 rounded-full border border-gray-300" 
+                            style={{ backgroundColor: color.color_code || getDefaultColorCode(color.name) }}
+                          ></div>
+                          <span className="text-sm text-gray-700 group-hover:text-gray-900">{color.name}</span>
+                        </div>
                       </label>
                     ))}
                   </div>
@@ -651,6 +830,14 @@ const ProductListPage = ({
           </div>
         </div>
       </div>
+      
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        imageUrl={selectedImage}
+        productTitle={selectedProductTitle}
+      />
     </div>
   );
 };

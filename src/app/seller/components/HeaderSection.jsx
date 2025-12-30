@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import logo from "../../../assets/fonts/ic_neo.png";
+import logo from "../../../assets/fonts/LOGO_SVG.svg";
 
 const HeaderSection = () => (
   <div className="text-center mb-8 flex-col justify-center items-center">

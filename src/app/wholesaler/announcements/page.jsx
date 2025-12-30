@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPaperPlane } from 'react-icons/fa';
 import { useAuth } from '../../../hooks/useAuth';
 import Layout from '../../../components/Layout';
-import { getAnnouncementMessages } from '../../../api/announcement';
+import { getAnnouncementMessages, createAnnouncementMessage } from '../../../api/announcement';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import bg from '../../../assets/fonts/bg.png'
 // Jalali date conversion helpers
 const persianMonths = [
@@ -57,9 +59,12 @@ export default function AnnouncementsPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
   
-  // Prevent double fetching
+  // Refs
   const hasFetched = useRef(false);
+  const messagesEndRef = useRef(null);
 
   // Fetch messages
   const fetchMessages = useCallback(async () => {
@@ -127,6 +132,13 @@ export default function AnnouncementsPage() {
     })).filter(group => group.messages.length > 0);
   }, [groupedMessages, searchQuery]);
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   if (loading) {
     return (
       <Layout pageTitle="تابلوی اعلانات">
@@ -141,12 +153,55 @@ export default function AnnouncementsPage() {
     return null;
   }
 
+  // Send new message
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+    
+    setSendingMessage(true);
+    try {
+      const token = getToken();
+      await createAnnouncementMessage(newMessage, token);
+      
+      // Add the message to the messages list
+      const newMsg = {
+        id: Date.now(), // Temporary ID
+        text: newMessage,
+        sender_name: 'شما',
+        created_at: new Date().toISOString()
+      };
+      
+      setMessages(prevMessages => [newMsg, ...prevMessages]);
+      setNewMessage('');
+      setLastUpdate(new Date().toISOString());
+      toast.success('پیام با موفقیت ارسال شد');
+      
+      // Refetch messages to get the actual message with server ID
+      fetchMessages();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast.error('خطا در ارسال پیام');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+  
   return (
     <Layout pageTitle="تابلوی اعلانات">
+      <ToastContainer
+        position="bottom-left"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div 
-        className="min-h-screen"
+        className="min-h-screen flex flex-col"
         style={{
-          
           backgroundImage: `url(${bg.src})`,
           backgroundSize:'cover',
           backgroundPosition:'center',
@@ -207,14 +262,14 @@ export default function AnnouncementsPage() {
                   <div className="space-y-3">
                     {group.messages.map((message) => (
                       <div key={message.id} className="flex justify-end">
-                        <div className="flex items-end gap-2 ml-[25px] md:ml-[5px] max-w-[85%] md:max-w-[70%]">
+                        <div className="flex items-end gap-2 max-w-[75%] md:max-w-[70%]">
                           {/* Time */}
                           <span className="text-xs text-gray-400 mb-1 whitespace-nowrap">
                             {formatTime(message.created_at)}
                           </span>
 
                           {/* Message Bubble */}
-                          <div className="bg-[#f8f4ef] rounded-2xl rounded-br-md px-4 py-3 shadow-sm border border-gray-100 w-full">
+                          <div className="bg-[#f8f4ef] rounded-2xl rounded-br-md px-4 py-3 shadow-sm border border-gray-100 min-w-0">
                             {/* Sender Name */}
                             <div className="flex items-center justify-end mb-2">
                               <span className="text-sm font-semibold text-blue-600">
@@ -223,7 +278,7 @@ export default function AnnouncementsPage() {
                             </div>
 
                             {/* Message Text */}
-                            <p className="text-sm text-gray-700 leading-relaxed text-right whitespace-pre-wrap break-words">
+                            <p className="text-sm text-gray-700 leading-relaxed text-right whitespace-pre-wrap break-all md:break-words">
                               {message.text}
                             </p>
                           </div>
@@ -236,6 +291,33 @@ export default function AnnouncementsPage() {
             </div>
           )}
         </div>
+        
+        {/* Message Input */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="پیام جدید بنویسید..."
+                className="flex-1 p-3 bg-gray-100 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                disabled={sendingMessage}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={sendingMessage || !newMessage.trim()}
+                className={`p-3 rounded-r-lg ${sendingMessage || !newMessage.trim() ? 'bg-gray-300 text-gray-500' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+              >
+                <FaPaperPlane className={sendingMessage ? 'animate-pulse' : ''} />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Invisible element for scrolling */}
+        <div ref={messagesEndRef} />
       </div>
     </Layout>
   );

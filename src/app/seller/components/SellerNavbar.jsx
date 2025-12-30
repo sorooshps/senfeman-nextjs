@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import logo from "../../../assets/fonts/ic_neo.png";
+import logo from "../../../assets/fonts/LOGO_SVG.svg";
 import { getAnnouncementUnreadCount } from "../../../api/seller";
 import { useAuth } from "../../../hooks/useAuth";
 
@@ -215,14 +215,18 @@ const SellerNavbar = () => {
       <nav className="lg:hidden fixed bottom-4 left-4 right-4 z-50" dir="rtl">
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 px-2 py-2">
           <div className="flex items-center justify-around">
-            {/* Search - Navigate to /seller */}
-            <Link 
-              href="/seller"
+            {/* Search - Navigate to /seller and force refresh */}
+            <button 
+              onClick={() => {
+                // Force navigation to main page by using window.location
+                // This ensures all states are reset
+                window.location.href = '/seller';
+              }}
               className="flex flex-col items-center gap-1 p-3 text-gray-500 hover:text-blue-600 transition-all duration-200 rounded-xl hover:bg-blue-50 active:scale-95"
             >
               <Search className="w-5 h-5" />
               <span className="text-[10px] font-semibold">جستجو</span>
-            </Link>
+            </button>
 
             {/* Categories - Use MainPage's handleShowCategories */}
             <button 

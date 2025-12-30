@@ -159,18 +159,44 @@ export const useSearch = () => {
     }
   }, [getToken, searchQuery]);
 
-  const handleRecentSearchClick = useCallback((recentItem) => {
+  const handleRecentSearchClick = useCallback(async (recentItem) => {
     // recentItem can be an object with id/title or just a string
-    if (typeof recentItem === 'object' && recentItem.title) {
-      setSearchQuery(recentItem.title);
-    } else {
-      setSearchQuery(recentItem);
+    const searchText = typeof recentItem === 'object' && recentItem.title ? recentItem.title : recentItem;
+    setSearchQuery(searchText);
+    
+    // Actually perform the search
+    const token = getToken();
+    if (!token) return;
+    
+    setLoadingSearch(true);
+    try {
+      // If recentItem is a subcategory, search by scategory ID
+      const params = { page_size: 20 };
+      if (typeof recentItem === 'object' && recentItem.type === 'subcategory' && recentItem.id) {
+        params.scategory = recentItem.id;
+      } else {
+        params.q = searchText.trim();
+      }
+      
+      const response = await searchProducts(params, token);
+      const products = response.results || response || [];
+      setSearchResults(products);
+      
+      if (products.length > 0) {
+        // Select first product by default
+        setSelectedProduct(products[0]);
+      }
+    } catch (err) {
+      console.error('Error searching from recent item:', err);
+    } finally {
+      setLoadingSearch(false);
     }
+    
     setHasSearched(true);
     setIsSearchModalOpen(false);
     setShowSearchHistory(false);
     setSearchSuggestions([]);
-  }, []);
+  }, [getToken]);
 
   const handleSuggestionClick = useCallback(async (suggestion) => {
     // suggestion is now a subcategory object

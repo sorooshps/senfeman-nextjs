@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import apiConfig from "../../../config/api.config";
 import { FaChevronLeft, FaChevronDown, FaChevronUp, FaFilter } from "react-icons/fa6";
@@ -8,7 +8,6 @@ import { IoIosArrowBack, IoIosClose } from "react-icons/io";
 import logo from "../../../assets/fonts/LOGO_SVG.svg";
 import { useAuth } from "../../../hooks/useAuth";
 import { searchProducts, getBrands, getColors } from "../../../api/seller";
-import ImageModal from "../../../components/ImageModal";
 
 const PAGE_SIZE = 20;
 const API_BASE_URL = apiConfig.API_BASE_URL;
@@ -42,14 +41,6 @@ const CategoriesSection = ({
   const [selectedColorIds, setSelectedColorIds] = useState([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [expandedFilters, setExpandedFilters] = useState({ brand: true, color: true });
-  
-  // Image modal state
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedProductTitle, setSelectedProductTitle] = useState("");
-
-  // Track previous filter state to detect changes including clearing filters
-  const prevFiltersRef = useRef({ brandIds: [], colorIds: [] });
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -214,26 +205,10 @@ const CategoriesSection = ({
 
   // Fetch filtered products when filters change
   useEffect(() => {
-    if (!selectedSubcategory) return;
-    
-    // Check if filters have actually changed from previous state
-    const prevBrandIds = prevFiltersRef.current.brandIds;
-    const prevColorIds = prevFiltersRef.current.colorIds;
-    
-    const brandsChanged = JSON.stringify(prevBrandIds.sort()) !== JSON.stringify([...selectedBrandIds].sort());
-    const colorsChanged = JSON.stringify(prevColorIds.sort()) !== JSON.stringify([...selectedColorIds].sort());
-    
-    // If filters changed and we're not on initial mount (prev filters exist)
-    if ((brandsChanged || colorsChanged) && (prevBrandIds.length > 0 || prevColorIds.length > 0 || selectedBrandIds.length > 0 || selectedColorIds.length > 0)) {
+    if (selectedSubcategory && (selectedBrandIds.length > 0 || selectedColorIds.length > 0)) {
       setCurrentPage(1);
       fetchProducts(1, false);
     }
-    
-    // Update previous filter state
-    prevFiltersRef.current = {
-      brandIds: [...selectedBrandIds],
-      colorIds: [...selectedColorIds]
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBrandIds, selectedColorIds]);
 
@@ -294,62 +269,9 @@ const CategoriesSection = ({
 
   const hasActiveFilters = selectedBrandIds.length > 0 || selectedColorIds.length > 0;
 
-  // Handle image click
-  const handleImageClick = useCallback((e, product) => {
-    e.stopPropagation();
-    const imageUrl = getProductImage(product);
-    if (imageUrl) {
-      setSelectedImage(imageUrl);
-      setSelectedProductTitle(product.title);
-      setIsImageModalOpen(true);
-    }
-  }, []);
-
-  // Get category image with proper URL formatting
-  const getCategoryImage = (category) => {
-    if (category?.image) {
-      let imageUrl = category.image;
-      
-      // If URL is already absolute (starts with http), return it as is
-      if (imageUrl.startsWith('http')) {
-        return imageUrl;
-      }
-      
-      // Remove '/media' prefix if it exists
-      if (imageUrl.startsWith('/media/')) {
-        imageUrl = imageUrl.replace('/media', '');
-      }
-      
-      // Make sure the URL doesn't have double slashes
-      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-      const formattedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-      
-      return `${baseUrl}${formattedUrl}`;
-    }
-    return null;
-  };
-
-  // Get subcategory image with proper URL formatting
+  // Get subcategory image
   const getSubcategoryImage = (subcat) => {
-    if (subcat?.image) {
-      let imageUrl = subcat.image;
-      
-      // If URL is already absolute (starts with http), return it as is
-      if (imageUrl.startsWith('http')) {
-        return imageUrl;
-      }
-      
-      // Remove '/media' prefix if it exists
-      if (imageUrl.startsWith('/media/')) {
-        imageUrl = imageUrl.replace('/media', '');
-      }
-      
-      // Make sure the URL doesn't have double slashes
-      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-      const formattedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-      
-      return `${baseUrl}${formattedUrl}`;
-    }
+    if (subcat?.image) return subcat.image;
     return null;
   };
 
@@ -423,8 +345,8 @@ const CategoriesSection = ({
                       />
                       <div className="space-y-3 max-h-48 overflow-y-auto">
                         {filteredBrands.length > 0 ? (
-                          filteredBrands.map((brand, index) => (
-                            <label key={`categories-brand-${brand.id}-${index}`} className="flex items-center gap-3 cursor-pointer group">
+                          filteredBrands.map((brand) => (
+                            <label key={brand.id} className="flex items-center gap-3 cursor-pointer group">
                               <input
                                 type="checkbox"
                                 checked={selectedBrandIds.includes(brand.id)}
@@ -454,8 +376,8 @@ const CategoriesSection = ({
                   {expandedFilters.color && (
                     <div className="px-5 pb-4 space-y-3 max-h-48 overflow-y-auto">
                       {availableColors.length > 0 ? (
-                        availableColors.map((color, index) => (
-                          <label key={`categories-color-${color.id}-${index}`} className="flex items-center gap-3 cursor-pointer group">
+                        availableColors.map((color) => (
+                          <label key={color.id} className="flex items-center gap-3 cursor-pointer group">
                             <input
                               type="checkbox"
                               checked={selectedColorIds.includes(color.id)}
@@ -489,7 +411,7 @@ const CategoriesSection = ({
                   <div className="space-y-2">
                     {categories.map((category, index) => (
                       <button
-                        key={`category-item-${category.id || index}`}
+                        key={category.id || index}
                         onClick={() => onCategoryClick(index)}
                         className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
                           activeCategory === index 
@@ -554,14 +476,11 @@ const CategoriesSection = ({
                     <div className="divide-y divide-gray-100">
                       {products.map((product, index) => (
                         <div
-                          key={`categories-product-${product.id || index}`}
+                          key={product.id || index}
                           onClick={() => onProductSelect && onProductSelect(product)}
                           className="py-4 flex items-center gap-6 cursor-pointer hover:bg-gray-50 transition-colors group px-2 -mx-2 rounded-lg"
                         >
-                          <div 
-                            className="w-20 h-20 shrink-0 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-                            onClick={(e) => handleImageClick(e, product)}
-                          >
+                          <div className="w-20 h-20 shrink-0 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
                             {getProductImage(product) ? (
                               <Image 
                                 src={getProductImage(product)} 
@@ -590,8 +509,8 @@ const CategoriesSection = ({
                                 <div className="flex items-center flex-wrap gap-2 mt-2">
                                   <span className="text-sm text-gray-500">رنگ:</span>
                                   <div className="flex items-center flex-wrap gap-2">
-                                    {product.colors.map((color, index) => (
-                                      <div key={`categories-product-${product.id}-color-${color.id}-${index}`} className="flex items-center gap-1">
+                                    {product.colors.map(color => (
+                                      <div key={color.id} className="flex items-center gap-1">
                                         {color.color_code && (
                                           <div 
                                             className="w-4 h-4 rounded-full border border-gray-300" 
@@ -669,7 +588,7 @@ const CategoriesSection = ({
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {subcategories.map((subcat, index) => (
                       <button
-                        key={`subcategory-${subcat.id || index}`}
+                        key={subcat.id || index}
                         onClick={() => handleSubcategoryClick(subcat)}
                         className="group p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all flex flex-col items-center gap-3"
                       >
@@ -701,14 +620,6 @@ const CategoriesSection = ({
           </div>
         </div>
       </div>
-      
-      {/* Image Modal */}
-      <ImageModal
-        isOpen={isImageModalOpen}
-        onClose={() => setIsImageModalOpen(false)}
-        imageUrl={selectedImage}
-        productTitle={selectedProductTitle}
-      />
     </div>
   );
 };

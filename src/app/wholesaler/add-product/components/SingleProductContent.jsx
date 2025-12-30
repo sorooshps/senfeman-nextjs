@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { FaSearch, FaPlus, FaMinus, FaArrowRight, FaCheck, FaFilter, FaTimes, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 import { useAuth } from '../../../../hooks/useAuth';
+import apiConfig from '../../../../config/api.config';
 import { 
   searchProducts, 
   getCategories, 
@@ -12,6 +14,9 @@ import {
 
 const SingleProductContent = () => {
   const { getToken } = useAuth('wholesaler');
+  
+  // API base URL for image handling
+  const API_BASE_URL = apiConfig.API_BASE_URL;
   
   // ===== SEARCH SECTION STATES =====
   const [searchQuery, setSearchQuery] = useState('');
@@ -344,6 +349,54 @@ const SingleProductContent = () => {
 
   const getColorDot = (colorName) => colorDotMap[colorName] || 'bg-gray-400';
 
+  // Get product image
+  const getProductImage = (product) => {
+    if (!product) return null;
+    
+    // Check if product has images array
+    if (product.images && product.images.length > 0) {
+      let imageUrl = product.images[0].image_url;
+      if (!imageUrl) return null;
+      
+      // If URL is already absolute (starts with http), return it as is
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      
+      // Remove '/media' prefix if it exists
+      if (imageUrl.startsWith('/media/')) {
+        imageUrl = imageUrl.replace('/media', '');
+      }
+      
+      // Make sure the URL doesn't have double slashes
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      const formattedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+      
+      return `${baseUrl}${formattedUrl}`;
+    } 
+    // Fallback to direct image property if available
+    else if (product.image) {
+      let imagePath = product.image;
+      
+      if (imagePath.includes('http')) {
+        return imagePath;
+      } else {
+        // Remove '/media' prefix if it exists
+        if (imagePath.startsWith('/media/')) {
+          imagePath = imagePath.replace('/media', '');
+        }
+        
+        // Make sure the URL doesn't have double slashes
+        const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        imagePath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+        
+        return `${baseUrl}${imagePath}`;
+      }
+    }
+    
+    return null;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
@@ -395,7 +448,20 @@ const SingleProductContent = () => {
                       <tr key={product.id} className={stock > 0 ? 'bg-blue-50' : ''}>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 rounded-md bg-gray-100 ml-3"></div>
+                            <div className="h-10 w-10 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center ml-3">
+                              {getProductImage(product) ? (
+                                <Image 
+                                  src={getProductImage(product)} 
+                                  alt={product.title} 
+                                  width={40} 
+                                  height={40} 
+                                  className="h-full w-full object-contain"
+                                  unoptimized={getProductImage(product)?.includes('http')}
+                                />
+                              ) : (
+                                <div className="bg-gray-200 h-full w-full"></div>
+                              )}
+                            </div>
                             <span className="text-sm font-medium text-gray-900">{product.title}</span>
                           </div>
                         </td>
@@ -692,7 +758,20 @@ const SingleProductContent = () => {
                           }`}>
                             {isSelected && <FaCheck className="text-white text-xs" />}
                           </div>
-                          <div className="w-12 h-12 bg-gray-100 rounded-lg"></div>
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            {getProductImage(product) ? (
+                              <Image 
+                                src={getProductImage(product)} 
+                                alt={product.title} 
+                                width={48} 
+                                height={48} 
+                                className="h-full w-full object-contain"
+                                unoptimized={getProductImage(product)?.includes('http')}
+                              />
+                            ) : (
+                              <div className="bg-gray-200 h-full w-full"></div>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-800">{product.title}</span>
                         </div>
                       );
@@ -742,7 +821,20 @@ const SingleProductContent = () => {
                 {Object.values(selectedProducts).map(({ product, stock }) => (
                   <div key={product.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                      <div className="w-8 h-8 bg-gray-200 rounded overflow-hidden flex items-center justify-center">
+                        {getProductImage(product) ? (
+                          <Image 
+                            src={getProductImage(product)} 
+                            alt={product.title} 
+                            width={32} 
+                            height={32} 
+                            className="h-full w-full object-contain"
+                            unoptimized={getProductImage(product)?.includes('http')}
+                          />
+                        ) : (
+                          <div className="bg-gray-200 h-full w-full"></div>
+                        )}
+                      </div>
                       <span className="text-sm text-gray-700 truncate">{product.title}</span>
                     </div>
                     <span className="text-sm font-medium text-blue-600 mr-2 whitespace-nowrap">{stock} عدد</span>

@@ -5,6 +5,8 @@ import Layout from '../../../components/Layout';
 import SingleProductContent from './components/SingleProductContent';
 import CategoriesContent from './components/CategoriesContent';
 import { useAddProduct } from './hooks/useAddProduct';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const NewProductPage = () => {
     const [productType, setProductType] = useState('categories');
@@ -33,6 +35,18 @@ const NewProductPage = () => {
 
   return (
     <Layout>
+      <ToastContainer
+        position="bottom-left"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="py-6 bg-gray-100 min-h-screen" dir="rtl">
         {/* Product Type Selection */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">

@@ -127,7 +127,8 @@ export default function InformationPage() {
                 value={formData.first_name}
                 onChange={(e) => setFormData({...formData, first_name: e.target.value})}
                 placeholder="نام خود را وارد نمایید"
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                style={{ fontSize: '16px' }}
               />
             </div>
             <div className="space-y-3">
@@ -136,7 +137,8 @@ export default function InformationPage() {
                 value={formData.last_name}
                 onChange={(e) => setFormData({...formData, last_name: e.target.value})}
                 placeholder="نام خانوادگی خود را وارد نمایید"
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                style={{ fontSize: '16px' }}
               />
             </div>
 
@@ -146,13 +148,15 @@ export default function InformationPage() {
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 placeholder="شماره تماس یا شناسه ملی خود را وارد نمایید (مثال: 09123456789)"
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                style={{ fontSize: '16px' }}
               />
               <input
                 value={formData.phone2}
                 onChange={(e) => setFormData({...formData, phone2: e.target.value})}
                 placeholder="شماره تماس دوم (اختیاری)"
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                style={{ fontSize: '16px' }}
               />
             </div>
 
@@ -209,7 +213,8 @@ export default function InformationPage() {
                 value={formData.address}
                 onChange={(e) => setFormData({...formData, address: e.target.value})}
                 placeholder="آدرس محل کار خود را وارد نمایید"
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                style={{ fontSize: '16px' }}
               />
             </div>
 
@@ -218,7 +223,8 @@ export default function InformationPage() {
               <select
                 value={formData.city}
                 onChange={(e) => setFormData({...formData, city: parseInt(e.target.value)})}
-                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 border-gray-200 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                style={{ fontSize: '16px' }}
               >
                 <option value={0}>شهر خود را انتخاب کنید</option>
                 {cities.map(city => (

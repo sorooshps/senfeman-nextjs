@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { HelpCircle, MessageCircle, User, ChevronDown, Calendar } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import logo from '../assets/fonts/ic_neo.png';
+import logo from "../../../assets/fonts/LOGO_SVG.svg";
 
 const Layout = ({ children, pageTitle = "داشبورد" }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);

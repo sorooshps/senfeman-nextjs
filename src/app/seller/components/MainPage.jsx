@@ -65,15 +65,22 @@ export default function MainPage({ initialShowCategories = false }) {
   } = useCategories(setHasSearched, setSearchQuery, setSelectedProduct, initialShowCategories);
 
   // Force show categories when initialShowCategories is true
+  // Also reset other states to ensure proper navigation
   useEffect(() => {
     if (initialShowCategories) {
+      setShowProductList(false);
+      setCurrentSubcategory(null);
+      setHasSearched(false);
+      setSelectedProduct(null);
       setShowCategories(true);
     }
-  }, [initialShowCategories, setShowCategories]);
+  }, [initialShowCategories, setShowCategories, setHasSearched, setSelectedProduct, setShowProductList, setCurrentSubcategory]);
 
   // Modified search handler - shows product list first
   const handleSearch = () => {
     if (searchQuery.trim()) {
+      // Clear URL params when showing product list
+      router.replace('/seller', { scroll: false });
       setShowProductList(true);
       setCurrentSubcategory(null);
       setIsSearchModalOpen(false);
@@ -100,12 +107,16 @@ export default function MainPage({ initialShowCategories = false }) {
 
   // Handle back from product list
   const handleBackFromProductList = () => {
+    // Clear URL params when going back
+    router.replace('/seller', { scroll: false });
     setShowProductList(false);
     setCurrentSubcategory(null);
   };
 
   // Handle back from search results
   const handleBackFromResults = () => {
+    // Clear URL params when going back
+    router.replace('/seller', { scroll: false });
     setHasSearched(false);
     setSelectedProduct(null);
     setSearchQuery('');
@@ -113,6 +124,8 @@ export default function MainPage({ initialShowCategories = false }) {
 
   // Handle mobile subcategory click - show product list
   const handleMobileSubcategoryClick = (subcat) => {
+    // Clear URL params when showing product list from categories
+    router.replace('/seller', { scroll: false });
     setCurrentSubcategory(subcat);
     setShowProductList(true);
     setShowCategories(false);
@@ -181,7 +194,7 @@ export default function MainPage({ initialShowCategories = false }) {
           onSearchInputClick={handleSearchInputClick}
           mobile={true}
         />
-        <div className="fixed bottom-20 left-4 right-4">
+        {/* <div className="fixed bottom-20 left-4 right-4">
           <button
             onClick={handleShowCategories}
             className="w-full bg-blue-600 text-white py-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center gap-3 shadow-lg"
@@ -189,7 +202,7 @@ export default function MainPage({ initialShowCategories = false }) {
             <FaList className="text-lg" />
             مشاهده دسته‌بندی‌ها
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Desktop Layout */}

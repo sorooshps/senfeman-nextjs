@@ -3,8 +3,11 @@
 import Image from "next/image";
 import { FaChevronLeft } from "react-icons/fa6";
 import { IoIosArrowBack } from "react-icons/io";
-import logo from "../../../assets/fonts/ic_neo.png";
+import logo from "../../../assets/fonts/LOGO_SVG.svg";
 import SellerNavbar from "./SellerNavbar";
+import apiConfig from "../../../config/api.config";
+
+const API_BASE_URL = apiConfig.API_BASE_URL;
 
 const MobileCategoriesPage = ({
   activeCategory,
@@ -17,10 +20,50 @@ const MobileCategoriesPage = ({
   handleBackToMain,
   handleSubcategoryClick
 }) => {
-  // Get subcategory image
+  // Get category image with proper URL formatting
+  const getCategoryImage = (category) => {
+    if (category?.image) {
+      let imageUrl = category.image;
+      
+      // If URL is already absolute (starts with http), return it as is
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      
+      // Remove '/media' prefix if it exists
+      if (imageUrl.startsWith('/media/')) {
+        imageUrl = imageUrl.replace('/media', '');
+      }
+      
+      // Make sure the URL doesn't have double slashes
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      const formattedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+      
+      return `${baseUrl}${formattedUrl}`;
+    }
+    return null;
+  };
+
+  // Get subcategory image with proper URL formatting
   const getSubcategoryImage = (subcat) => {
     if (subcat?.image) {
-      return subcat.image;
+      let imageUrl = subcat.image;
+      
+      // If URL is already absolute (starts with http), return it as is
+      if (imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+      
+      // Remove '/media' prefix if it exists
+      if (imageUrl.startsWith('/media/')) {
+        imageUrl = imageUrl.replace('/media', '');
+      }
+      
+      // Make sure the URL doesn't have double slashes
+      const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      const formattedUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+      
+      return `${baseUrl}${formattedUrl}`;
     }
     return null;
   };
@@ -60,9 +103,16 @@ const MobileCategoriesPage = ({
                   onClick={() => handleCategoryClick(index)}
                   className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
                 >
-                  <span className="font-medium text-gray-700">
-                    {category.name}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    {getCategoryImage(category) && (
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200">
+                        <img src={getCategoryImage(category)} alt={category.name} className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                    <span className="font-medium text-gray-700">
+                      {category.name}
+                    </span>
+                  </div>
                   <FaChevronLeft className="text-gray-400 text-sm" />
                 </button>
               ))}

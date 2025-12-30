@@ -2,36 +2,88 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, LogOut, ChevronLeft, Settings, Shield, Bell, HelpCircle } from "lucide-react";
+import { User, LogOut, ChevronLeft, Settings, Shield, Bell, HelpCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "../../assets/fonts/ic_neo.png";
 import { useAuth } from "../../hooks/useAuth";
+import { getUserRoleStatus } from "../../api/user";
 
 export default function UserPage() {
   const router = useRouter();
-  const { getToken } = useAuth('seller');
+  const { getToken } = useAuth('seller', { skipRoleRedirect: true });
   const [userName, setUserName] = useState("کاربر");
-  const [userRole, setUserRole] = useState("فروشنده");
+  const [userRole, setUserRole] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+  const [userAddress, setUserAddress] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [profileStatus, setProfileStatus] = useState(null);
   
   useEffect(() => {
-    // This code will only run on the client side
-    if (typeof window !== 'undefined') {
-      // Get user info from localStorage
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        // If no token, just use localStorage data
+        const storedName = localStorage.getItem("user_name") || "کاربر";
+        const phone = localStorage.getItem("phone") || "";
+        setUserName(storedName);
+        setUserPhone(phone);
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await getUserRoleStatus(token);
+      setProfileStatus(response.status);
+      
+      if (response.status === 'accepted' && response.data) {
+        const data = response.data;
+        const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || "کاربر";
+        setUserName(fullName);
+        setUserPhone(data.phone || localStorage.getItem("phone") || "");
+        setUserAddress(data.address || "");
+        
+        // Set role display
+        if (data.role === 'wholesaler') {
+          setUserRole("بنکدار");
+        } else if (data.role === 'seller') {
+          setUserRole("فروشنده");
+        }
+        
+        // Update localStorage
+        localStorage.setItem("user_name", fullName);
+      } else {
+        // Fallback to localStorage
+        const storedName = localStorage.getItem("user_name") || "کاربر";
+        const phone = localStorage.getItem("phone") || "";
+        setUserName(storedName);
+        setUserPhone(phone);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      // Fallback to localStorage on error
       const storedName = localStorage.getItem("user_name") || "کاربر";
       const phone = localStorage.getItem("phone") || "";
-      
       setUserName(storedName);
+      setUserPhone(phone);
+    } finally {
       setIsLoading(false);
-      
-      // You could fetch more user data from API here
     }
-  }, []);
+  };
   
-  // Show loading state while checking localStorage
+  // Show loading state while fetching data
   if (isLoading) {
-    return <div>Loading...</div>; // or a loading spinner
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-gray-600">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
   }
   
   const handleLogout = () => {
@@ -93,8 +145,9 @@ export default function UserPage() {
             </div>
             <div className="flex-1">
               <h2 className="font-bold text-gray-900 text-xl">{userName}</h2>
-              <p className="text-sm text-gray-500">{userRole}</p>
-              <p className="text-sm text-gray-500 mt-1">{localStorage.getItem("phone") || ""}</p>
+              {userRole && <p className="text-sm text-gray-500">{userRole}</p>}
+              {userPhone && <p className="text-sm text-gray-500 mt-1">{userPhone}</p>}
+              {userAddress && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{userAddress}</p>}
             </div>
           </div>
         </div>

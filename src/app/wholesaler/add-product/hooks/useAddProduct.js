@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import {
   getCategories,
   getBrandsBySubcategory,
@@ -212,6 +213,7 @@ export const useAddProduct = () => {
   const handleSubmit = useCallback(async () => {
     if (!token || !selectedSubcategory) {
       setError('لطفا دسته‌بندی را انتخاب کنید');
+      toast.error('لطفا دسته‌بندی را انتخاب کنید');
       return;
     }
 
@@ -240,12 +242,21 @@ export const useAddProduct = () => {
       setSelectedProducts([]);
       setSelectedColors([]);
       setActiveStep('category');
+      
+      // Show success toast
+      toast.success('محصولات با موفقیت اضافه شدند');
 
       return { success: true };
     } catch (err) {
       console.error('Failed to submit:', err);
-      setError(err.message || 'خطا در ثبت محصول');
-      return { success: false, error: err.message };
+      const errorMessage = err.message || 'خطا در ثبت محصول';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      // Even with a 400 error, if the product is added (as mentioned in the task),
+      // we can reset some form values
+      setSelectedProducts([]);
+      setSelectedColors([]);
+      return { success: false, error: errorMessage };
     } finally {
       setSubmitting(false);
     }

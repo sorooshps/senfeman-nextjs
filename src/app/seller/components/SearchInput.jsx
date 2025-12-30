@@ -20,7 +20,7 @@ const SearchInput = ({
         className="relative cursor-pointer group"
       >
         {/* Animated border gradient on hover */}
-        <div className="absolute -inset-0.5 bg-linear-to-l from-blue-500 to-blue-600 rounded-2xl opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 blur-sm" />
+        <div className="absolute -inset-0.5 bg-gradient-to-l from-blue-500 to-blue-600 rounded-2xl opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 blur-sm" />
         
         <div className="relative bg-white rounded-2xl shadow-lg border border-gray-100 px-5 py-2 flex items-center gap-4 group-hover:shadow-xl transition-all duration-300">
           {/* Search icon with animated background */}
@@ -43,7 +43,7 @@ const SearchInput = ({
     <div className="flex gap-3">
       <div className="flex-1 relative group">
         {/* Subtle glow effect on focus */}
-        <div className="absolute -inset-1 bg-linear-to-l from-blue-400 to-blue-600 rounded-2xl opacity-0 group-focus-within:opacity-20 transition-opacity duration-300 blur-lg" />
+        <div className="absolute -inset-1 bg-gradient-to-l from-blue-400 to-blue-600 rounded-2xl opacity-0 group-focus-within:opacity-20 transition-opacity duration-300 blur-lg" />
         
         <div className="relative">
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -65,7 +65,7 @@ const SearchInput = ({
       </div>
       <button 
         onClick={onSearch}
-        className="bg-linear-to-l from-blue-600 to-blue-700 text-white px-8 py-4 rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md flex items-center gap-2 font-semibold"
+        className="bg-gradient-to-l from-blue-600 to-blue-700 text-white px-8 py-4 rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md flex items-center gap-2 font-semibold"
       >
         <FaSearchengin className="text-lg" />
         جستجو

@@ -9,8 +9,10 @@ import { MdOutlineInventory2 } from "react-icons/md";
 import HeaderSection from "./HeaderSection";
 import SellerNavbar from "./SellerNavbar";
 import SearchInput from "./SearchInput";
-import logo from "../../../assets/fonts/ic_neo.png";
+import Image from "next/image";
+import logo from "../../../assets/fonts/LOGO_SVG.svg";
 import RecentSearches from "./RecentSearches";
+import ImageModal from "../../../components/ImageModal";
 
 import {
   getWholesalersByProduct,
@@ -42,6 +44,11 @@ const SearchResultsPage = ({
   const [loadingExact, setLoadingExact] = useState(false);
   const [loadingEstimated, setLoadingEstimated] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  
+  // Image modal state
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedProductTitle, setSelectedProductTitle] = useState("");
 
   // Log when component receives props
   console.log(
@@ -150,6 +157,17 @@ const SearchResultsPage = ({
     return null;
   };
 
+  // Handle image click
+  const handleImageClick = (e) => {
+    e.stopPropagation();
+    const imageUrl = getProductImage(selectedProduct);
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setSelectedProductTitle(selectedProduct?.title || "");
+      setIsImageModalOpen(true);
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-gray-50 "
@@ -175,21 +193,28 @@ const SearchResultsPage = ({
         {/* Product Card */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-4">
           <div className="flex items-center gap-3">
-            {getProductImage(selectedProduct) ? (
-              <img
-                src={getProductImage(selectedProduct)}
-                alt="product"
-                className="w-12 h-12 rounded-lg object-cover"
-              />
-            ) : (
-              <Image
-                src={logo}
-                alt="product"
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-lg object-cover"
-              />
-            )}
+            <div 
+              className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all rounded-lg"
+              onClick={handleImageClick}
+            >
+              {getProductImage(selectedProduct) ? (
+                <img
+                  src={getProductImage(selectedProduct)}
+                  alt="product"
+                  className="w-12 h-12 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-100">
+                  <Image
+                    src={logo}
+                    alt="product"
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                  />
+                </div>
+              )}
+            </div>
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 text-sm">
                 {selectedProduct?.title || "محصول"}
@@ -200,7 +225,7 @@ const SearchResultsPage = ({
                 </span>
                 {selectedProduct?.code && (
                   <span className="text-xs text-gray-500">
-                    #{selectedProduct.code}
+                    {selectedProduct.code}
                   </span>
                 )}
               </div>
@@ -220,7 +245,17 @@ const SearchResultsPage = ({
                   <div key={i}>• دسته: {cat.name}</div>
                 ))}
                 {selectedProduct.colors?.map((color, i) => (
-                  <div key={i}>• رنگ: {color.name}</div>
+                  <div key={i} className="flex items-center gap-1">• رنگ: 
+                    <div className="flex items-center gap-1">
+                      {color.color_code && (
+                        <div 
+                          className="w-3 h-3 rounded-full border border-gray-300" 
+                          style={{ backgroundColor: color.color_code }}
+                        ></div>
+                      )}
+                      {color.name}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -296,7 +331,7 @@ const SearchResultsPage = ({
   {/* Main content wrapper for mobile */}
   <div className="flex items-start gap-4 sm:flex-1 sm:items-center">
     {/* Phone Icon - More prominent on mobile */}
-    <div className="flex-shrink-0">
+    <div className="shrink-0">
       <div className="
         w-14 h-14
         sm:w-12 sm:h-12 
@@ -484,7 +519,7 @@ const SearchResultsPage = ({
   {/* Main content wrapper for mobile */}
   <div className="flex items-start gap-4 sm:flex-1 sm:items-center">
     {/* Phone Icon - More prominent on mobile */}
-    <div className="flex-shrink-0">
+    <div className="shrink-0">
       <div className="
         w-14 h-14
         sm:w-12 sm:h-12 
@@ -584,27 +619,34 @@ const SearchResultsPage = ({
             {/* LEFT SIDEBAR */}
             <div className="lg:col-span-2 space-y-6 mt-[216px]" dir="rtl">
               {/* Product Card */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+              <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
                 <div
                   className="flex justify-between items-center cursor-pointer"
                   onClick={() => setShowDetails(!showDetails)}
                 >
                   <div className="flex items-center gap-4">
-                    {getProductImage(selectedProduct) ? (
-                      <img
-                        src={getProductImage(selectedProduct)}
-                        alt="product"
-                        className="w-16 h-16 rounded-xl object-cover shadow-md"
-                      />
-                    ) : (
-                      <Image
-                        src={logo}
-                        alt="product"
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 rounded-xl object-cover shadow-md"
-                      />
-                    )}
+                    <div 
+                      className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all rounded-xl"
+                      onClick={handleImageClick}
+                    >
+                      {getProductImage(selectedProduct) ? (
+                        <img
+                          src={getProductImage(selectedProduct)}
+                          alt="product"
+                          className="w-16 h-16 rounded-xl object-cover shadow-md"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gray-100 shadow-md">
+                          <Image
+                            src={logo}
+                            alt="product"
+                            width={64}
+                            height={64}
+                            className="object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
                     <div>
                       <h2 className="font-bold text-gray-900 text-lg">
                         {selectedProduct?.title || "محصول"}
@@ -615,7 +657,7 @@ const SearchResultsPage = ({
                         </span>
                         {selectedProduct?.code && (
                           <span className="text-xs text-gray-500">
-                            #{selectedProduct.code}
+                            {selectedProduct.code}
                           </span>
                         )}
                       </div>
@@ -739,6 +781,14 @@ const SellerCard = ({ seller }) => {
           <span className="text-gray-900 font-medium">{fullName}</span>
         </div>
       </div>
+      
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        imageUrl={selectedImage}
+        productTitle={selectedProductTitle}
+      />
     </div>
   );
 };

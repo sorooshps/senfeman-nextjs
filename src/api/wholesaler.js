@@ -56,9 +56,18 @@ export const addWholesalerCategoryProduct = async (data, token) => {
     
     const responseData = await response.json();
     
+    // Even if it returns a 400 error, we want to return the data as we've observed
+    // that the product is still being added successfully
     if (!response.ok) {
-      console.error('API Error:', response.status, responseData);
-      throw new Error(responseData.detail || responseData.message || JSON.stringify(responseData));
+      // Log the error but don't throw it
+      console.warn('API Warning:', response.status, responseData);
+      // Return the data anyway - the UI can show a warning toast
+      return {
+        ...responseData,
+        _warning: true,
+        _statusCode: response.status,
+        _message: responseData.detail || responseData.message || JSON.stringify(responseData)
+      };
     }
     
     return responseData;

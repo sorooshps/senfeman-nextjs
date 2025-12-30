@@ -1,6 +1,20 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user has a token
+    const access = localStorage.getItem("access");
+    if (access) {
+      // User is already logged in, redirect to role-status
+      router.push("/auth/role-status");
+    }
+  }, [router]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center" dir="rtl">
       <div className="max-w-md w-full mx-4">
@@ -11,12 +25,12 @@ export default function Home() {
           </div>
 
           <div className="space-y-4">
-            <Link
-              href="/auth/login"
-              className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-200 block"
+            <button
+              onClick={() => router.push("/auth/login")}
+              className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-200"
             >
               ورود به حساب کاربری
-            </Link>
+            </button>
 
             <div className="text-sm text-gray-500">
               <p>برای استفاده از امکانات پلتفرم وارد حساب خود شوید</p>

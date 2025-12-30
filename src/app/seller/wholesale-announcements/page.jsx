@@ -444,7 +444,7 @@ export default function WholesaleAnnouncementsPage() {
               </div>
 
               {/* Messages Area - Added transparent bg to let pattern show, but kept functionality */}
-              <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-white/50 backdrop-blur-sm flex flex-col-reverse" style={{
+              <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-white/50 backdrop-blur-sm flex flex-col" style={{
             // Note: chatBackgroundPattern.src is used because Next.js imports images as objects
             backgroundImage: chatBackgroundPattern ? `url(${chatBackgroundPattern.src})` : 'none',
             backgroundRepeat: 'repeat', // or 'cover' depending on your image type
@@ -461,7 +461,7 @@ export default function WholesaleAnnouncementsPage() {
                   </div>
                 ) : (
                   <div className="space-y-4 max-w-4xl mx-auto w-full pt-4">
-                    {[...groupedMessages].reverse().map((group, groupIndex) => (
+                    {groupedMessages.map((group, groupIndex) => (
                       <div key={groupIndex}>
                         <div className="flex justify-center my-4">
                           <div className="px-3 py-1 bg-white rounded-full shadow-sm text-xs text-gray-600 border border-gray-200">

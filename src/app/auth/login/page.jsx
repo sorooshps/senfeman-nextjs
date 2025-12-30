@@ -753,9 +753,10 @@ export default function LoginPage() {
                   setPhoneNumber(value);
                 }}
                 placeholder="شماره موبایل"
-                className={`w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 ${error ? 'border-red-500' : 'border-gray-200'} focus:outline-none focus:border-blue-500`}
+                className={`w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 ${error ? 'border-red-500' : 'border-gray-200'} focus:outline-none focus:border-blue-500`}
                 dir="ltr"
                 inputMode="numeric"
+                style={{ fontSize: '16px' }}
               />
             </div>
 
@@ -764,7 +765,8 @@ export default function LoginPage() {
                 <button
                   onClick={handleSendOtp}
                   disabled={loading}
-                  className="flex-1 py-4 rounded-xl bg-gradient-to-l from-blue-600 to-blue-700 text-white text-base font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50"
+                  className="flex-1 py-4 rounded-xl bg-gradient-to-l from-blue-600 to-blue-700 text-white text-base font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                style={{ fontSize: '16px' }}
                 >
                   {loading ? "در حال ارسال..." : "تایید"}
                 </button>
@@ -795,25 +797,29 @@ export default function LoginPage() {
                 onClick={handleOtpClick}
                 dir="ltr" 
               >
-                {/* Transparent but visible input for typing - FIXED for mobile */}
+                {/* Hidden input for typing - mobile optimized */}
                 <input
                   ref={otpInputRef}
-                  type="text"
+                  type="tel"
                   value={otp}
                   onChange={handleOtpChange}
                   onKeyDown={handleOtpKeyDown}
                   onFocus={handleOtpFocus}
                   onPaste={handlePaste}
-                  className="absolute top-0 left-0 w-full h-12 opacity-0 z-10 cursor-text text-transparent bg-transparent"
+                  className="absolute top-0 left-0 w-full h-12 z-10 cursor-text bg-transparent border-0 outline-none caret-transparent"
                   inputMode="numeric"
                   maxLength={5}
                   autoComplete="one-time-code"
-                  dir="ltr"  
+                  dir="ltr"
+                  autoFocus={currentStep === 2}
                   style={{
-                    fontSize: '16px', // Prevents zoom on iOS
-                    letterSpacing: '24px', // Spread out the characters
-                    paddingLeft: '6px', // Adjust for proper positioning
-                    textIndent: '6px', // Adjust for proper positioning
+                    fontSize: '16px',
+                    color: 'transparent',
+                    caretColor: 'transparent',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '24px',
+                    paddingLeft: '6px',
+                    textIndent: '6px',
                   }}
                 />
                 
@@ -888,7 +894,7 @@ export default function LoginPage() {
                 <button
                   onClick={handleVerifyOtp}
                   disabled={loading || !isOtpValid}
-                  className="flex-2 py-4 rounded-lg bg-gradient-to-l from-blue-600 to-blue-700 text-white text-base font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                  className="flex-1 py-4 rounded-lg bg-gradient-to-l from-blue-600 to-blue-700 text-white text-base font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                 >
                   {loading ? "در حال تایید..." : "تایید"}
                 </button>
@@ -943,9 +949,10 @@ export default function LoginPage() {
                       setPhoneNumber(value);
                     }}
                     placeholder="شماره موبایل"
-                    className={`w-full bg-gray-50 rounded-xl py-4 px-4 text-sm placeholder-gray-500 border-2 ${error ? 'border-red-500' : 'border-gray-200'} focus:outline-none focus:border-blue-500 transition-all duration-200`}
+                    className={`w-full bg-gray-50 rounded-xl py-4 px-4 text-gray-900 placeholder-gray-500 border-2 ${error ? 'border-red-500' : 'border-gray-200'} focus:outline-none focus:border-blue-500 transition-all duration-200`}
                     dir="ltr"
                     inputMode="numeric"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
 
