@@ -785,63 +785,54 @@ export default function LoginPage() {
             </div>
 
             {/* Single OTP Input with Visual Boxes */}
-            <div className="space-y-4">
-              <label className="text-sm font-medium text-gray-700 block">
-                کد پیامک شده به شماره {phoneNumber || "۰۹۱۳۴۵۶۷۸۹"} را وارد نمایید
-              </label>
-              
-              {/* Container for the OTP input and visual boxes */}
-              <div 
-                ref={otpContainerRef}
-                className="relative w-full" 
-                onClick={handleOtpClick}
-                dir="ltr" 
-              >
-                {/* Hidden input for typing - mobile optimized */}
-                <input
-                  ref={otpInputRef}
-                  type="tel"
-                  value={otp}
-                  onChange={handleOtpChange}
-                  onKeyDown={handleOtpKeyDown}
-                  onFocus={handleOtpFocus}
-                  onPaste={handlePaste}
-                  className="absolute top-0 left-0 w-full h-12 z-10 cursor-text bg-transparent border-0 outline-none caret-transparent"
-                  inputMode="numeric"
-                  maxLength={5}
-                  autoComplete="one-time-code"
-                  dir="ltr"
-                  autoFocus={currentStep === 2}
-                  style={{
-                    fontSize: '16px',
-                    color: 'transparent',
-                    caretColor: 'transparent',
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '24px',
-                    paddingLeft: '6px',
-                    textIndent: '6px',
-                  }}
-                />
-                
-                {/* Visual boxes container */}
-                <div className="flex gap-2 justify-between">
-                  {[0, 1, 2, 3, 4].map((index) => (
-                    <div
-                      key={index}
-                      className={`w-12 h-12 bg-gray-50 rounded-xl text-sm border-2 transition-all duration-200 text-center font-bold flex items-center justify-center ${getDigitBoxClass(index)}`}
-                    >
-                      <span className="text-gray-900 text-lg">
-                        {getDigit(index)}
-                      </span>
-                      {/* Show cursor on the next empty box */}
-                      {index === otp.length && document.activeElement === otpInputRef.current && (
-                        <span className="ml-0.5 w-0.5 h-6 bg-blue-500 animate-pulse"></span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+             <div className="space-y-4">
+    <label className="text-sm font-medium text-gray-700 block">
+      کد پیامک شده به شماره {phoneNumber || "۰۹۱۳۴۵۶۷۸۹"} را وارد نمایید
+    </label>
+    
+    {/* Container for the OTP input and visual boxes */}
+    <div 
+      ref={otpContainerRef}
+      className="relative w-full" 
+      onClick={handleOtpClick}
+      dir="ltr" 
+    >
+      {/* Hidden input for typing - FIXED VERSION */}
+      <input
+        ref={otpInputRef}
+        type="tel"
+        value={otp}
+        onChange={handleOtpChange}
+        onKeyDown={handleOtpKeyDown}
+        onFocus={handleOtpFocus}
+        onPaste={handlePaste}
+        className="absolute top-0 left-0 w-full h-12 z-10 cursor-pointer bg-transparent border-0 outline-none opacity-0"
+        inputMode="numeric"
+        maxLength={5}
+        autoComplete="one-time-code"
+        dir="ltr"
+        autoFocus={currentStep === 2}
+      />
+      
+      {/* Visual boxes container */}
+      <div className="flex gap-2 justify-between">
+        {[0, 1, 2, 3, 4].map((index) => (
+          <div
+            key={index}
+            className={`w-12 h-12 bg-gray-50 rounded-xl text-sm border-2 transition-all duration-200 text-center font-bold flex items-center justify-center ${getDigitBoxClass(index)}`}
+          >
+            <span className="text-gray-900 text-lg">
+              {getDigit(index)}
+            </span>
+            {/* Show cursor on the next empty box */}
+            {index === otp.length && document.activeElement === otpInputRef.current && (
+              <span className="ml-0.5 w-0.5 h-6 bg-blue-500 animate-pulse"></span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
 
             <div className="text-center space-y-4">
               {verificationCode && (

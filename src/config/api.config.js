@@ -1,7 +1,8 @@
 const config = {
   // Base API URL
-  API_BASE_URL:  'http://185.105.239.235:8000',
+  API_BASE_URL:  'http://185.105.239.235',
   // API_BASE_URL:  'http://127.0.0.1:8000',
+  // API_BASE_URL:  'http://10.194.243.15:8000',
   
   // API Endpoints
   endpoints: {
@@ -51,6 +52,12 @@ const config = {
       UNREAD_COUNT: '/announcement/notifications/unread-count/',
       MARK_ALL_READ: '/announcement/notifications/mark-all-read/',
     },
+     SERVICE_PROVIDERS: {
+    MOTORCYCLE: '/service_provider/motorcycle/',
+    VAN: '/service_provider/van/',
+    CART: '/service_provider/cart/',
+    LIFT: '/service_provider/lift/',
+  },
     
     // Media
     MEDIA: {

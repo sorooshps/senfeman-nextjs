@@ -3,6 +3,7 @@
 import { useAuth } from "../../hooks/useAuth";
 import MainPage from "./components/MainPage";
 import { useSearchParams } from "next/navigation";
+import SellerNavbar from "./components/SellerNavbar";
 
 export default function SellerPage() {
   const { isAuthenticated, loading, error } = useAuth('seller', { skipRoleRedirect: true });
@@ -12,6 +13,7 @@ export default function SellerPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
+        
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">در حال بارگذاری...</p>
